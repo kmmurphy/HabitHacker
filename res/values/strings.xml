@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">HabitHacker</string>
+    <string name="action_settings">Settings</string>
+    <string name="enter_aspiration">Enter your Aspiration</string>
+    <string name="no_aspirations">Record an Aspiration</string>
+	<string name="menu_insert">Add Aspiration</string>
+	<string name="menu_delete">Delete Aspiration</string>
+	
+	
+</resources>
