@@ -135,11 +135,9 @@ public class dbAdapter {
      * @param rowId id of aspiration to delete
      * @return true if deleted, false otherwise
      */
-    /*
-    public boolean deleteAspiration(long rowId) {
-
-        return mDb.delete(DATABASE_TABLE, KEY_ROWID + "=" + rowId, null) > 0;
-    } */
+    public boolean deleteAspiration(int rowId) {
+        return mDb.delete(AspirationEntry.TABLE_NAME, AspirationEntry._ID + "=" + rowId, null) > 0;
+    } 
 
     /**
      * Return a Cursor over the list of all aspirations in the database
@@ -156,40 +154,20 @@ public class dbAdapter {
     }
 	
     /**
-     * Return a Cursor positioned at the aspiration that matches the given rowId
-     * 
-     * @param rowId id of note to retrieve
-     * @return Cursor positioned to matching aspiration, if found
-     * @throws SQLException if aspiration could not be found/retrieved
-     */
-    /*
-    public Cursor fetchNote(long rowId) throws SQLException {
-
-        Cursor mCursor =
-            mDb.query(true, DATABASE_TABLE, new String[] {KEY_ROWID,
-                    KEY_ASPIRATION}, KEY_ROWID + "=" + rowId, null,
-                    null, null, null, null);
-        if (mCursor != null) {
-            mCursor.moveToFirst();
-        }
-        return mCursor;
-
-    } */
-
-    /**
      * Update the aspiration using the details provided. The aspiration to be updated is
      * specified using the rowId, and it is altered to use the title and body
      * values passed in
      * 
-     * @param rowId id of aspiration to update
-     * @param title value to set aspiration title to
+     * @param rowId: id of aspiration to update
+     * @param description: value to set aspiration description to
+     * @param numSteps: value to set the number of steps to
      * @return true if the note was successfully updated, false otherwise
      */
-    /*
-    public boolean updateNote(long rowId, String title) {
+    public boolean updateAspiration(int rowId, String description, int numSteps) {
         ContentValues args = new ContentValues();
-        args.put(KEY_ASPIRATION, title);
+        args.put(AspirationEntry.COLUMN_NAME_DESCRIPTION, description);
+        args.put(AspirationEntry.COLUMN_NAME_STEPS_COMPLETED, numSteps);
 
-        return mDb.update(DATABASE_TABLE, args, KEY_ROWID + "=" + rowId, null) > 0;
-    } */
+        return mDb.update(AspirationEntry.TABLE_NAME, args, AspirationEntry._ID + "=" + rowId, null) > 0;
+    } 
 }

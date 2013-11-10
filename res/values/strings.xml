@@ -7,6 +7,8 @@
     <string name="no_aspirations">Record an Aspiration</string>
 	<string name="menu_insert">Add Aspiration</string>
 	<string name="menu_delete">Delete Aspiration</string>
-	
+	<string name="edit_aspiration">Edit Aspiration</string>
+	<string name="description">Your Aspiration</string>
+    <string name="confirm">Confirm</string>	
 	
 </resources>
