@@ -1,5 +1,7 @@
 package edu.cmu.ssui.kmmurphy;
 
+import java.util.ArrayList;
+
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -27,39 +29,29 @@ public class dbAdapter {
     
     public static abstract class StepEntry implements BaseColumns {
     	public static final String TABLE_NAME = "steps";
-    	// foreign key to reference the associated aspiration
-    	public static final String COLUMN_NAME_ASPIRATION_ID = "aspirationId";
+    	public static final String COLUN_NAME_ASPIRATION_ID = "aspirationId";
     	public static final String COLUMN_NAME_DESCRIPTION = "description";
     	public static final String COLUMN_NAME_STREAK = "streak";
     }
     
+    
     /**
-     * Database creation sql statement
+     * Database creation sql statements
      */
-    /*
-    private static final String DATABASE_CREATE =
-        "BEGIN; " +
-        "CREATE TABLE " + AspirationEntry.TABLE_NAME + " (" +
-        AspirationEntry._ID + " INTEGER PRIMARY KEY," + 
-        AspirationEntry.COLUMN_NAME_DESCRIPTION + " TEXT," +
-        AspirationEntry.COLUMN_NAME_STEPS_COMPLETED + " INTEGER NOT NULL" +
-        "); " +
-        "CREATE TABLE " + StepEntry.TABLE_NAME + " (" +
-        StepEntry._ID + " INTEGER PRIMARY KEY," +
-        StepEntry.COLUMN_NAME_ASPIRATION_ID + " INTEGER NOT NULL REFERENCES " +
-        AspirationEntry.TABLE_NAME + "(" + AspirationEntry._ID + ")," +
-        StepEntry.COLUMN_NAME_DESCRIPTION + " TEXT," +
-        StepEntry.COLUMN_NAME_STREAK + " INTEGER NOT NULL" +
-        "); " + 
-        "COMMIT;";
-      */
-    private static final String DATABASE_CREATE = 
+    private static final String CREATE_TABLE_ASPIRATION = 
     		"CREATE TABLE " + AspirationEntry.TABLE_NAME + " (" +
     		        AspirationEntry._ID + " INTEGER PRIMARY KEY, " + 
     		        AspirationEntry.COLUMN_NAME_DESCRIPTION + " TEXT not null, " +
     		        AspirationEntry.COLUMN_NAME_STEPS_COMPLETED + " INTEGER NOT NULL);";
         
-        
+    private static final String CREATE_TABLE_STEP =
+    		"CREATE TABLE " + StepEntry.TABLE_NAME + " (" +
+    		        StepEntry._ID + " INTEGER PRIMARY KEY, " +
+    				StepEntry.COLUN_NAME_ASPIRATION_ID + " INTEGER NOT NULL, " +
+    		        StepEntry.COLUMN_NAME_DESCRIPTION + " TEXT NOT NULL, " +
+    		        StepEntry.COLUMN_NAME_STREAK + " INTEGER NOT NULL);";
+    
+    
     private final Context mCtx;
 
     private static class DatabaseHelper extends SQLiteOpenHelper {
@@ -73,13 +65,15 @@ public class dbAdapter {
 
         @Override
         public void onCreate(SQLiteDatabase db) {
-            db.execSQL(DATABASE_CREATE);
+            db.execSQL(CREATE_TABLE_ASPIRATION);
+            db.execSQL(CREATE_TABLE_STEP);
         }
 
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-            db.execSQL("DROP TABLE IF EXISTS aspirations");
-            db.execSQL("DROP TABLE IF EXISTS steps");
+            db.execSQL("DROP TABLE IF EXISTS "+AspirationEntry.TABLE_NAME);
+            db.execSQL("DROP TABLE IF EXISTS "+StepEntry.TABLE_NAME);
+
             onCreate(db);
         }
     }
@@ -129,6 +123,7 @@ public class dbAdapter {
 
         return mDb.insert(AspirationEntry.TABLE_NAME, null, initialValues);
     }
+
     /**
      * Delete the aspiration with the given rowId
      * 
@@ -136,6 +131,21 @@ public class dbAdapter {
      * @return true if deleted, false otherwise
      */
     public boolean deleteAspiration(int rowId) {
+    	//first delete all steps related to that aspiration
+    	Cursor stepsCursor = mDb.query(StepEntry.TABLE_NAME,
+												new String[] { 
+											  		StepEntry._ID},
+											  	StepEntry.COLUN_NAME_ASPIRATION_ID+"="+Integer.toString(rowId), 
+											  	null, null, null, null);
+    	
+        stepsCursor.moveToFirst();
+        while (!stepsCursor.isAfterLast()){
+        	int id = stepsCursor.getInt(0);
+        	deleteStep(id);
+        	stepsCursor.moveToNext();
+        }
+        stepsCursor.close();
+        // now delete that aspiration
         return mDb.delete(AspirationEntry.TABLE_NAME, AspirationEntry._ID + "=" + rowId, null) > 0;
     } 
 
@@ -170,4 +180,44 @@ public class dbAdapter {
 
         return mDb.update(AspirationEntry.TABLE_NAME, args, AspirationEntry._ID + "=" + rowId, null) > 0;
     } 
+    
+    /**
+     * Create a new step. If the step is
+     * successfully created return the new rowId for that note, otherwise return
+     * a -1 to indicate failure.
+     * 
+     * @param description - the description of the step
+     * @return rowId or -1 if failed
+     */
+    public Long createStep(int aspirationId, String sDescription){
+    	// get the step ids from the aspiration->step map
+        ContentValues initialValues = new ContentValues();
+        initialValues.put(StepEntry.COLUN_NAME_ASPIRATION_ID, aspirationId);
+        initialValues.put(StepEntry.COLUMN_NAME_DESCRIPTION, sDescription);
+        initialValues.put(StepEntry.COLUMN_NAME_STREAK, 0);
+
+        return mDb.insert(StepEntry.TABLE_NAME, null, initialValues);    	
+    }
+    
+    /**
+     * Delete the step with the given rowId
+     * 
+     * @param rowId id of step to delete
+     * @return true if deleted, false otherwise
+     */
+    public boolean deleteStep(int rowId) {
+        return mDb.delete(StepEntry.TABLE_NAME, StepEntry._ID + "=" + rowId, null) > 0;
+    }
+    
+    public Cursor fetchSteps(int aspirationId) {
+    	// query the database for steps associated with that aspiration id
+    	return mDb.query(StepEntry.TABLE_NAME,
+    				new String[] { 
+				  		StepEntry._ID,
+    					StepEntry.COLUMN_NAME_DESCRIPTION,
+				  		StepEntry.COLUMN_NAME_STREAK},
+				  	StepEntry.COLUN_NAME_ASPIRATION_ID+"=" + Integer.toString(aspirationId), 
+				  	null, null, null, null);
+    }
+    
 }

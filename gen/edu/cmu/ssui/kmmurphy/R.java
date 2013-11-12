@@ -26,16 +26,19 @@ public final class R {
         public static final int ic_launcher=0x7f020002;
     }
     public static final class id {
-        public static final int action_settings=0x7f080004;
+        public static final int action_settings=0x7f080006;
         public static final int addAspiration=0x7f080000;
-        public static final int confirm=0x7f080002;
-        public static final int description=0x7f080001;
-        public static final int text1=0x7f080003;
+        public static final int addStep=0x7f080005;
+        public static final int aspirationDescription=0x7f080003;
+        public static final int aspirationSteps=0x7f080004;
+        public static final int aspiration_description=0x7f080001;
+        public static final int text1=0x7f080002;
     }
     public static final class layout {
         public static final int activity_main=0x7f030000;
         public static final int aspiration_edit=0x7f030001;
         public static final int aspiration_row=0x7f030002;
+        public static final int show_aspiration=0x7f030003;
     }
     public static final class menu {
         public static final int main=0x7f070000;
@@ -43,7 +46,9 @@ public final class R {
     public static final class string {
         public static final int action_settings=0x7f050001;
         public static final int app_name=0x7f050000;
+        public static final int cancel=0x7f050009;
         public static final int confirm=0x7f050008;
+        public static final int createAspirationHint=0x7f05000a;
         public static final int description=0x7f050007;
         public static final int edit_aspiration=0x7f050006;
         public static final int enter_aspiration=0x7f050002;

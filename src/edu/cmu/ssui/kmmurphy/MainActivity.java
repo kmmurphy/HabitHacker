@@ -3,17 +3,21 @@ package edu.cmu.ssui.kmmurphy;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.app.AlertDialog;
 import android.app.ListActivity;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
 import android.widget.ListView;
 import edu.cmu.ssui.kmmurphy.dbAdapter.AspirationEntry;
 
@@ -24,7 +28,7 @@ public class MainActivity extends ListActivity {
 	private List<Aspiration> aspirations = new ArrayList<Aspiration>();
 	
 	private static final int ACTIVITY_CREATE=0;
-    private static final int ACTIVITY_EDIT=1;
+    private static final int SHOW_ACTIVITY=1;
 
     private static final int INSERT_ID = Menu.FIRST;
     private static final int DELETE_ID = Menu.FIRST + 1;
@@ -64,14 +68,37 @@ public class MainActivity extends ListActivity {
 	}
     
     public void createAspiration(View v) {
-    	/*
-    	Intent i = new Intent(this, AspirationEdit.class);
-    	startActivityForResult(i, ACTIVITY_CREATE);
-    	*/
     	// create an aspiration through a dialog modal
-    	
-    	
-    	
+    	AlertDialog.Builder builder = new AlertDialog.Builder(this);
+	    // Get the layout inflater
+	    LayoutInflater inflater = this.getLayoutInflater();
+	    
+	    View dialogView = inflater.inflate(R.layout.aspiration_edit, null);
+	    final EditText editDescriptionInput = (EditText) dialogView.findViewById(R.id.aspiration_description);
+		
+	    // Inflate and set the layout for the dialog
+	    // Pass null as the parent view because its going in the dialog layout
+	    builder.setView(dialogView)
+	        .setTitle("Create New Aspiration")
+	    	// Add action buttons
+	    	.setPositiveButton(R.string.confirm, new DialogInterface.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					// create new aspiration
+					String newAspiration = editDescriptionInput.getText().toString();
+					mDbHelper.createAspiration(newAspiration);
+					fillData();
+					dialog.cancel();
+				}
+	    	})
+	    	.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+	    		public void onClick(DialogInterface dialog, int id) {
+	    			dialog.cancel();
+	            }	
+	        });
+	    
+	    AlertDialog newAspirationDialog = builder.create();
+	    newAspirationDialog.show();
     }    
 	
     private void fillData() {
@@ -100,11 +127,11 @@ public class MainActivity extends ListActivity {
         super.onListItemClick(l, v, position, id);
         Aspiration a = aspirations.get(((int) id));
     	
-        Intent i = new Intent(this, AspirationEdit.class);
+        Intent i = new Intent(this, ShowAspiration.class);
         i.putExtra(AspirationEntry._ID, a.getId());
         i.putExtra(AspirationEntry.COLUMN_NAME_DESCRIPTION, a.getDescription());
         i.putExtra(AspirationEntry.COLUMN_NAME_STEPS_COMPLETED, a.getSteps());
-        startActivityForResult(i, ACTIVITY_EDIT);
+        startActivity(i);
     }
     
     @Override
