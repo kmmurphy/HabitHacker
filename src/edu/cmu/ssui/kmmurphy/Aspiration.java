@@ -3,12 +3,15 @@ package edu.cmu.ssui.kmmurphy;
 public class Aspiration {
 	private int id;
 	private String description;
-	private int steps;
+	private int stepsInProgress;
+	private int stepsCompleted;
 	
-	public Aspiration(int aId, String aDescription, int aSteps){
+	
+	public Aspiration(int aId, String aDescription, int aStepsInProgress, int aStepsCompleted){
 		id = aId;
 		description = aDescription;
-		steps = aSteps;
+		stepsInProgress = aStepsInProgress;
+		stepsCompleted = aStepsCompleted;
 	}
 	
 	public int getId(){
@@ -17,9 +20,12 @@ public class Aspiration {
 	public String getDescription() {
 		return description;
 	}
-	public int getSteps(){
-		return steps;
+	public int getStepsInProgress(){
+		return stepsInProgress;
 	}	
+	public int getStepsCompleted(){
+		return stepsCompleted;
+	}
 	@Override
 	public String toString() {
 		return description;

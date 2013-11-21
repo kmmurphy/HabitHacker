@@ -22,23 +22,45 @@ public final class R {
     }
     public static final class drawable {
         public static final int add_button=0x7f020000;
-        public static final int context_button=0x7f020001;
+        public static final int homescreenbg=0x7f020001;
         public static final int ic_launcher=0x7f020002;
+        public static final int rounded_corners_white=0x7f020003;
     }
     public static final class id {
-        public static final int action_settings=0x7f080006;
+        public static final int action_settings=0x7f080018;
         public static final int addAspiration=0x7f080000;
-        public static final int addStep=0x7f080005;
-        public static final int aspirationDescription=0x7f080003;
-        public static final int aspirationSteps=0x7f080004;
+        public static final int addStep=0x7f08000a;
+        public static final int aspDescription=0x7f080002;
+        public static final int aspSteps=0x7f080003;
+        public static final int aspirationDescription=0x7f080005;
+        public static final int aspirationHeader=0x7f080004;
         public static final int aspiration_description=0x7f080001;
-        public static final int text1=0x7f080002;
+        public static final int cancelButton=0x7f080015;
+        public static final int checkBox1=0x7f08000d;
+        public static final int checkBox2=0x7f08000e;
+        public static final int checkBox3=0x7f08000f;
+        public static final int checkBox4=0x7f080010;
+        public static final int checkBox5=0x7f080011;
+        public static final int checkBox6=0x7f080012;
+        public static final int checkBox7=0x7f080013;
+        public static final int confirmButton=0x7f080014;
+        public static final int descriptionText=0x7f08000c;
+        public static final int stepDescription=0x7f080016;
+        public static final int stepStreak=0x7f080017;
+        public static final int stepsCompleted=0x7f080008;
+        public static final int stepsCompletedNumber=0x7f080009;
+        public static final int stepsInProgress=0x7f080006;
+        public static final int stepsInProgressNumber=0x7f080007;
+        public static final int textView1=0x7f08000b;
     }
     public static final class layout {
         public static final int activity_main=0x7f030000;
         public static final int aspiration_edit=0x7f030001;
         public static final int aspiration_row=0x7f030002;
-        public static final int show_aspiration=0x7f030003;
+        public static final int context_button=0x7f030003;
+        public static final int show_aspiration=0x7f030004;
+        public static final int step_edit=0x7f030005;
+        public static final int step_row=0x7f030006;
     }
     public static final class menu {
         public static final int main=0x7f070000;
@@ -49,12 +71,20 @@ public final class R {
         public static final int cancel=0x7f050009;
         public static final int confirm=0x7f050008;
         public static final int createAspirationHint=0x7f05000a;
+        public static final int create_aspiration=0x7f050004;
+        public static final int delete_aspiration=0x7f050005;
         public static final int description=0x7f050007;
         public static final int edit_aspiration=0x7f050006;
+        /**  Strings related to aspirations 
+         */
         public static final int enter_aspiration=0x7f050002;
-        public static final int menu_delete=0x7f050005;
-        public static final int menu_insert=0x7f050004;
         public static final int no_aspirations=0x7f050003;
+        public static final int step_description=0x7f05000b;
+        public static final int stepsCompleted=0x7f05000e;
+        public static final int stepsInProgess=0x7f05000d;
+        /**  Better Named Strings 
+         */
+        public static final int userSummaryAspirations=0x7f05000c;
     }
     public static final class style {
         /** 
@@ -80,9 +110,14 @@ public final class R {
          */
         public static final int AppBaseTheme=0x7f060000;
         /**  Application theme. 
- All customizations that are NOT specific to a particular API-level can go here. 
          */
         public static final int AppTheme=0x7f060001;
-        public static final int aspirationRow=0x7f060002;
+        public static final int aspirationHeader=0x7f060005;
+        public static final int aspirationPage=0x7f060006;
+        public static final int aspirationRow=0x7f060004;
+        /**  Styles related to the actionbar 
+         */
+        public static final int habitHackerActionBarStyle=0x7f060002;
+        public static final int habitHackerActionBarText=0x7f060003;
     }
 }

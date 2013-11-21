@@ -1,7 +1,5 @@
 package edu.cmu.ssui.kmmurphy;
 
-import java.util.ArrayList;
-
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -24,6 +22,7 @@ public class dbAdapter {
     public static abstract class AspirationEntry implements BaseColumns {
     	public static final String TABLE_NAME = "aspirations";
     	public static final String COLUMN_NAME_DESCRIPTION = "description";
+    	public static final String COLUMN_NAME_STEPS_IN_PROGRESS = "stepsInProgress";
     	public static final String COLUMN_NAME_STEPS_COMPLETED = "stepsCompleted";
     }
     
@@ -32,6 +31,9 @@ public class dbAdapter {
     	public static final String COLUN_NAME_ASPIRATION_ID = "aspirationId";
     	public static final String COLUMN_NAME_DESCRIPTION = "description";
     	public static final String COLUMN_NAME_STREAK = "streak";
+    	public static final String COLUMN_NAME_COMPLETED = "completed";
+    	public static final String COLUMN_NAME_LAST_COMPLETE = "lastCompleted";
+    	public static final String COLUMN_NAME_DAYS = "days";
     }
     
     
@@ -42,6 +44,7 @@ public class dbAdapter {
     		"CREATE TABLE " + AspirationEntry.TABLE_NAME + " (" +
     		        AspirationEntry._ID + " INTEGER PRIMARY KEY, " + 
     		        AspirationEntry.COLUMN_NAME_DESCRIPTION + " TEXT not null, " +
+    		        AspirationEntry.COLUMN_NAME_STEPS_IN_PROGRESS + " INTEGER NOT NULL, " +
     		        AspirationEntry.COLUMN_NAME_STEPS_COMPLETED + " INTEGER NOT NULL);";
         
     private static final String CREATE_TABLE_STEP =
@@ -49,16 +52,28 @@ public class dbAdapter {
     		        StepEntry._ID + " INTEGER PRIMARY KEY, " +
     				StepEntry.COLUN_NAME_ASPIRATION_ID + " INTEGER NOT NULL, " +
     		        StepEntry.COLUMN_NAME_DESCRIPTION + " TEXT NOT NULL, " +
-    		        StepEntry.COLUMN_NAME_STREAK + " INTEGER NOT NULL);";
+    		        StepEntry.COLUMN_NAME_STREAK + " INTEGER NOT NULL, " + 
+    		        StepEntry.COLUMN_NAME_COMPLETED + " INTEGER NOT NULL, " +
+    		        StepEntry.COLUMN_NAME_LAST_COMPLETE + " TEXT, " +
+    		        StepEntry.COLUMN_NAME_DAYS + " TEXT NOT NULL);" ;
     
     
     private final Context mCtx;
 
     private static class DatabaseHelper extends SQLiteOpenHelper {
         private static final String DATABASE_NAME = "HabitHacker.db";
-        private static final int DATABASE_VERSION = 3;
+        private static final int DATABASE_VERSION = 7;
 
-
+        private static DatabaseHelper sInstance = null;
+        
+        //getInstance function so you don't create multiple database helpers...cause that's leaky and bad
+        public static DatabaseHelper getInstance(Context context) {    
+            if (sInstance == null) {
+              sInstance = new DatabaseHelper(context.getApplicationContext());
+            }
+            return sInstance;
+        }
+        
         DatabaseHelper(Context context) {
             super(context, DATABASE_NAME, null, DATABASE_VERSION);
         }
@@ -98,7 +113,7 @@ public class dbAdapter {
      * @throws SQLException if the database could be neither opened or created
      */
     public dbAdapter open() throws SQLException {
-    	mDbHelper = new DatabaseHelper(mCtx);
+    	mDbHelper = DatabaseHelper.getInstance(mCtx);
     	mDb = mDbHelper.getWritableDatabase();
         return this;
     }
@@ -119,6 +134,7 @@ public class dbAdapter {
     public long createAspiration(String description) {
         ContentValues initialValues = new ContentValues();
         initialValues.put(AspirationEntry.COLUMN_NAME_DESCRIPTION, description);
+        initialValues.put(AspirationEntry.COLUMN_NAME_STEPS_IN_PROGRESS, 0);
         initialValues.put(AspirationEntry.COLUMN_NAME_STEPS_COMPLETED, 0);
 
         return mDb.insert(AspirationEntry.TABLE_NAME, null, initialValues);
@@ -159,6 +175,7 @@ public class dbAdapter {
         return mDb.query(AspirationEntry.TABLE_NAME, 
         		new String[] {AspirationEntry._ID, 
         					  AspirationEntry.COLUMN_NAME_DESCRIPTION,
+        					  AspirationEntry.COLUMN_NAME_STEPS_IN_PROGRESS,
         					  AspirationEntry.COLUMN_NAME_STEPS_COMPLETED},
         		null, null, null, null, null);
     }
@@ -173,11 +190,12 @@ public class dbAdapter {
      * @param numSteps: value to set the number of steps to
      * @return true if the note was successfully updated, false otherwise
      */
-    public boolean updateAspiration(int rowId, String description, int numSteps) {
+    public boolean updateAspiration(int rowId, String description, int numStepsInProgress, int numStepsCompleted) {
         ContentValues args = new ContentValues();
         args.put(AspirationEntry.COLUMN_NAME_DESCRIPTION, description);
-        args.put(AspirationEntry.COLUMN_NAME_STEPS_COMPLETED, numSteps);
-
+        args.put(AspirationEntry.COLUMN_NAME_STEPS_IN_PROGRESS, numStepsInProgress);
+        args.put(AspirationEntry.COLUMN_NAME_STEPS_COMPLETED, numStepsCompleted);
+        
         return mDb.update(AspirationEntry.TABLE_NAME, args, AspirationEntry._ID + "=" + rowId, null) > 0;
     } 
     
@@ -189,12 +207,14 @@ public class dbAdapter {
      * @param description - the description of the step
      * @return rowId or -1 if failed
      */
-    public Long createStep(int aspirationId, String sDescription){
+    public Long createStep(int aspirationId, String sDescription, String days){
     	// get the step ids from the aspiration->step map
         ContentValues initialValues = new ContentValues();
         initialValues.put(StepEntry.COLUN_NAME_ASPIRATION_ID, aspirationId);
         initialValues.put(StepEntry.COLUMN_NAME_DESCRIPTION, sDescription);
         initialValues.put(StepEntry.COLUMN_NAME_STREAK, 0);
+        initialValues.put(StepEntry.COLUMN_NAME_COMPLETED, 0);
+        initialValues.put(StepEntry.COLUMN_NAME_DAYS, days);
 
         return mDb.insert(StepEntry.TABLE_NAME, null, initialValues);    	
     }
@@ -215,9 +235,21 @@ public class dbAdapter {
     				new String[] { 
 				  		StepEntry._ID,
     					StepEntry.COLUMN_NAME_DESCRIPTION,
-				  		StepEntry.COLUMN_NAME_STREAK},
+				  		StepEntry.COLUMN_NAME_STREAK,
+				  		StepEntry.COLUMN_NAME_COMPLETED,
+				  		StepEntry.COLUMN_NAME_LAST_COMPLETE,
+				  		StepEntry.COLUMN_NAME_DAYS},
 				  	StepEntry.COLUN_NAME_ASPIRATION_ID+"=" + Integer.toString(aspirationId), 
 				  	null, null, null, null);
     }
     
+    public boolean updateStep(int rowId, String description, int streak, int completed, String lastComplete, String days) {
+        ContentValues args = new ContentValues();
+        args.put(StepEntry.COLUMN_NAME_DESCRIPTION, description);
+        args.put(StepEntry.COLUMN_NAME_STREAK, streak);
+        args.put(StepEntry.COLUMN_NAME_COMPLETED, completed);
+        args.put(StepEntry.COLUMN_NAME_LAST_COMPLETE, lastComplete);
+        args.put(StepEntry.COLUMN_NAME_DAYS, days);
+        return mDb.update(AspirationEntry.TABLE_NAME, args, AspirationEntry._ID + "=" + rowId, null) > 0;
+    }
 }

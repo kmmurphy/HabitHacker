@@ -8,31 +8,68 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin">
 	
-	<TextView android:id="@+id/aspirationDescription"
-	    android:layout_width="wrap_content"
-		android:layout_height="wrap_content"/>
-	<TextView android:id="@+id/aspirationSteps"
-	    android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:layout_below="@+id/aspirationDescription"/>
+    <RelativeLayout
+        android:id="@+id/aspirationHeader"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+      	style="@style/aspirationHeader"
+        android:background="@drawable/rounded_corners_white">
+    
+		<TextView android:id="@+id/aspirationDescription"
+		    android:layout_width="wrap_content"
+			android:layout_height="wrap_content"/>
+		<RelativeLayout 
+		    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+		    android:layout_below="@+id/aspirationDescription">
+			
+			<TextView android:id="@+id/stepsInProgress"
+		    		  android:layout_width="wrap_content"
+					  android:layout_height="wrap_content"
+					  android:text="@string/stepsInProgess"/>
+			<TextView android:id="@+id/stepsInProgressNumber"
+		    		  android:layout_width="wrap_content"
+					  android:layout_height="wrap_content"
+					  android:gravity="center_horizontal"
+					  android:layout_below="@+id/stepsInProgress"/>
+		</RelativeLayout>
+		<RelativeLayout 
+		    android:layout_width="fill_parent"
+		    android:layout_height="wrap_content"
+		    android:orientation="horizontal"
+		    android:gravity="right"
+		    android:layout_below="@+id/aspirationDescription">
+			
+			<TextView android:id="@+id/stepsCompleted"
+		    		  android:layout_width="wrap_content"
+					  android:layout_height="wrap_content"
+					  android:text="@string/stepsCompleted"/>
+			<TextView android:id="@+id/stepsCompletedNumber"
+		    		  android:layout_width="wrap_content"
+					  android:layout_height="wrap_content"
+					  android:layout_below="@+id/stepsCompleted"/>
+		</RelativeLayout>
+				
+	</RelativeLayout>
+	
 	<ListView
         android:id="@android:id/list"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" 
-        android:layout_below="@+id/aspirationSteps" />
+        android:layout_below="@+id/aspirationHeader" />
   	
   	<TextView android:id="@android:id/empty"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/no_aspirations"
-        android:layout_below="@+id/aspirationSteps"/>
+        android:layout_below="@+id/aspirationHeader"/>
 
 	<Button
         android:id="@+id/addStep"
         android:layout_width="50dp"
         android:layout_height="50dp"
         android:layout_gravity="bottom"
-        android:contentDescription="@string/menu_insert"
+        android:contentDescription="@string/create_aspiration"
         android:background="@drawable/add_button" 
         android:layout_alignParentLeft="true"
 		android:layout_alignParentBottom="true"
