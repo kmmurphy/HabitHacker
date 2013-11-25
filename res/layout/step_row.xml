@@ -3,17 +3,28 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
+    style="@style/rowStyle"
     android:background="@drawable/rounded_corners_white" >
         
 <TextView android:id="@+id/stepDescription"
-    style="@style/aspirationRow"
     android:layout_width="wrap_content"
-    android:layout_height="wrap_content"/>
+    android:layout_height="wrap_content"
+    android:layout_alignParentTop="true"
+	android:layout_alignParentLeft="true"
+	style="@style/h3" />
+
+<TextView android:id="@+id/stepProgress"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_alignParentLeft="true"
+	android:layout_below="@+id/stepDescription"
+	style="@style/h4" />
 
 <TextView android:id="@+id/stepStreak"
-    style="@style/aspirationRow"
-    android:layout_width="fill_parent"
+    style="@style/h2"
+    android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:gravity="right"/>
+    android:layout_centerVertical="true"
+    android:layout_alignParentRight="true"/>
 
 </RelativeLayout>

@@ -2,23 +2,25 @@ package edu.cmu.ssui.kmmurphy;
 
 
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
-import java.util.List;
-import java.util.SimpleTimeZone;
-import java.util.TimeZone;
+import java.util.Collections;
+import java.util.Comparator;
 
+import android.app.ActionBar;
 import android.app.ListActivity;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.support.v4.widget.SimpleCursorAdapter;
 import android.util.Log;
+import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.ListView;
 import android.widget.TextView;
 import edu.cmu.ssui.kmmurphy.dbAdapter.AspirationEntry;
 import edu.cmu.ssui.kmmurphy.dbAdapter.StepEntry;
+
 
 public class ShowAspiration extends ListActivity {
 	// related aspiration fields
@@ -29,21 +31,30 @@ public class ShowAspiration extends ListActivity {
 	
 	private dbAdapter mDbHelper;
     private Cursor stepsCursor;
-    private SimpleCursorAdapter sAdapter;
+    private StepAdapter sAdapter;
+    
+    TextView aStepsInProgress;
+    TextView aStepsComplete;
 
-	
     private static final int CREATE_STEP = 0;
-	private List<Step> steps = new ArrayList<Step>();
+	private static final int EDIT_STEP = 1;
+	private static final int DELETE_STEP = 2;
+	private static final int COMPLETE_STEP = 3;
+
+	private ArrayList<Step> steps = new ArrayList<Step>();
 	
     @Override
     protected void onCreate(Bundle savedInstanceState) {
     	super.onCreate(savedInstanceState);
     	setContentView(R.layout.show_aspiration);
     	
-    	TextView aDescriptionField = (TextView) findViewById(R.id.aspirationDescription);
-    	TextView aStepsInProgress = (TextView) findViewById(R.id.stepsInProgressNumber);
-    	TextView aStepsCompleted = (TextView) findViewById(R.id.stepsCompletedNumber);
+		ActionBar actionBar = getActionBar();
+		actionBar.setTitle("Goals to Achieve");
     	
+    	TextView aDescriptionField = (TextView) findViewById(R.id.aspirationDescription);
+    	aStepsInProgress = (TextView) findViewById(R.id.stepsInProgressNumber);
+    	aStepsComplete = (TextView) findViewById(R.id.stepsCompletedNumber);
+    	// get and display information about the aspiration 
     	Bundle extras = getIntent().getExtras();
         if (extras != null) {
         	aId = extras.getInt(AspirationEntry._ID);
@@ -53,15 +64,73 @@ public class ShowAspiration extends ListActivity {
         	//set the text shown in the UI
         	aDescriptionField.setText(aDescription);
         	aStepsInProgress.setText(Integer.toString(aNumStepsInProgress));
-        	aStepsCompleted.setText(Integer.toString(aNumStepsCompleted));
+        	aStepsComplete.setText(Integer.toString(aNumStepsCompleted));
         }
         mDbHelper = new dbAdapter(this);
 		mDbHelper.open();
 		
         fillSteps();
+		// register each aspiration for the context menu
+        registerForContextMenu(getListView());
+
     }
     
-    @SuppressWarnings("deprecation")
+    /**
+     * Adds a context menu on long-press of a step so you can edit, delete, or mark a step complete
+     */
+	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
+	    super.onCreateContextMenu(menu, v, menuInfo);
+	    menu.add(0, COMPLETE_STEP, 0, R.string.complete_step);
+	    menu.add(0, EDIT_STEP, 0, R.string.edit_step);
+	    menu.add(0, DELETE_STEP, 0, R.string.delete_step);
+	}
+
+	/**
+	 * Handle selection of a context menu
+	 */
+	public boolean onContextItemSelected(MenuItem item) {
+		AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
+        
+		switch(item.getItemId()) {
+	    case COMPLETE_STEP:
+	    	if(info.id >= 0 && info.id < steps.size()){
+	    		Step s = steps.get((int) info.id);
+	    		mDbHelper.markStepComplete(s.getId());
+	    		fillSteps();	    		
+        		mDbHelper.updateAspiration(aId, aDescription, aNumStepsInProgress--, aNumStepsCompleted++);
+        		aStepsInProgress.setText(Integer.toString(aNumStepsInProgress));
+        		aStepsComplete.setText(Integer.toString(aNumStepsCompleted));
+	        }
+	        return true;
+	    case DELETE_STEP:
+	    	if(info.id >= 0 && info.id < steps.size()){
+	    		Step s = steps.get((int) info.id);
+	    		mDbHelper.deleteStep(s.getId());
+	    		if(s.getCompleted() == 1){
+	        		mDbHelper.updateAspiration(aId, aDescription, aNumStepsInProgress, aNumStepsCompleted--);
+	        		aStepsComplete.setText(Integer.toString(aNumStepsCompleted));
+	    		} else {
+	    			mDbHelper.updateAspiration(aId, aDescription, aNumStepsInProgress--, aNumStepsCompleted);
+	        		aStepsInProgress.setText(Integer.toString(aNumStepsInProgress));
+	    		}
+	    		fillSteps();
+	    	}
+	        return true;
+		case EDIT_STEP:
+			Step s = steps.get((int)info.id);
+			
+	    	Intent i = new Intent(this, CreateStep.class);
+	    	i.putExtra(StepEntry._ID, s.getId());
+	    	i.putExtra(StepEntry.COLUMN_NAME_DESCRIPTION, s.getDescription());
+	    	i.putExtra(StepEntry.COLUMN_NAME_DAYS, s.getDays());
+	        startActivityForResult(i,EDIT_STEP);
+		}
+	    return super.onContextItemSelected(item);
+	}
+    
+    /**
+     * Get the steps from the database, sort them, and display them in a listview
+     */
 	private void fillSteps(){
     	stepsCursor = mDbHelper.fetchSteps(aId);
 
@@ -72,27 +141,41 @@ public class ShowAspiration extends ListActivity {
         	String description = stepsCursor.getString(1);
         	int streakLen = stepsCursor.getInt(2);
         	int completed = stepsCursor.getInt(3);
-        	String lastComplete = stepsCursor.getString(4);
+        	String dueDate = stepsCursor.getString(4);
+        	String reminderTime = stepsCursor.getString(5);
+        	// set days due in for steps array
         	String days = stepsCursor.getString(5);
-        	Log.v("MURPHY", "days are: "+days);
-        	Step newStep = new Step(id, description, streakLen, completed, lastComplete, days);
+        	Step newStep = new Step(id, description, streakLen, completed, dueDate, days, reminderTime);
+        	if(dueDate.equals("")){
+	        	mDbHelper.updateStepOnSwipe(id, newStep.getDueDate(), streakLen);
+        	}
         	steps.add(newStep);
         	stepsCursor.moveToNext();
         }
-        stepsCursor.moveToFirst();
+        // sort the steps list based on when the step is due
+        Collections.sort(steps, new Comparator<Step>(){
+        		public int compare(Step s1, Step s2){
+        			int daysDueIn1 = s1.getNumDaysDueIn();
+        			int daysDueIn2 = s2.getNumDaysDueIn();
+        			if(s1.getCompleted() == 1 && s2.getCompleted() == 0){
+        				return 1;
+        			}
+        			if(s1.getCompleted() == 0 && s2.getCompleted() == 1){
+        				return -1;
+        			}
+        			if(s1.getCompleted() == 1 && s2.getCompleted() == 1){
+        				return (s1.getStreak() < s2.getStreak()) ? -1: 1;
+        			} 
+        			return (daysDueIn1 < daysDueIn2) ? -1: 1;
+        		}
+        });
         
-        sAdapter = new SimpleCursorAdapter(this,
-                R.layout.step_row, 
-                stepsCursor,
-                new String[]{StepEntry.COLUMN_NAME_DESCRIPTION, StepEntry.COLUMN_NAME_STREAK},
-                new int[]{R.id.stepDescription, R.id.stepStreak});
+        
+        sAdapter = new StepAdapter(this, R.layout.step_row, steps);
         setListAdapter(sAdapter);
-        
 
         ListView listView = getListView();
-        // Create a ListView-specific touch listener. ListViews are given special treatment because
-        // by default they handle touches for their list items... i.e. they're in charge of drawing
-        // the pressed state (the list selector), handling list item clicks, etc.
+        // Create a ListView-specific touch listener.
         SwipeDismissListViewTouchListener touchListener =
                 new SwipeDismissListViewTouchListener(
                         listView,
@@ -106,12 +189,9 @@ public class ShowAspiration extends ListActivity {
                             public void onDismiss(ListView listView, int[] reverseSortedPositions) {
                                 for (int position : reverseSortedPositions) {
                     	        	Step s = steps.get(position);
-                    	        	mDbHelper.deleteStep(s.getId());
-                    	        	String[] ids = TimeZone.getAvailableIDs(-8 * 60 * 60 * 1000);
-                    	        	SimpleTimeZone pdt = new SimpleTimeZone(-8 * 60 * 60 * 1000, ids[0]);
-                    	        	Calendar calendar = new GregorianCalendar(pdt);
-                    	        	
-                    	        	
+                    	        	// update dueDate in the db
+                    	        	s.calculateDueDate();
+                    	        	mDbHelper.updateStepOnSwipe(s.getId(), s.getDueDate(), s.getStreak()+1);
                                 }
                                 fillSteps();
                             }
@@ -121,7 +201,9 @@ public class ShowAspiration extends ListActivity {
         // we don't look for swipes.
         listView.setOnScrollListener(touchListener.makeScrollListener());
     }
-    
+    /*
+     * Start the activity to create a new step
+     */
     public void createStep(View v) {
     	Intent i = new Intent(this, CreateStep.class);
         startActivityForResult(i,CREATE_STEP);
@@ -140,9 +222,21 @@ public class ShowAspiration extends ListActivity {
         	case CREATE_STEP:
                 String description = extras.getString(StepEntry.COLUMN_NAME_DESCRIPTION);
                 String days = extras.getString(StepEntry.COLUMN_NAME_DAYS);
-        		mDbHelper.createStep(aId, description, days);
+                String reminderTime = extras.getString(StepEntry.COLUMN_NAME_REMINDER_TIME);
+                // need to calculate the next due day and set it                
+        		mDbHelper.createStep(aId, description, "", days, reminderTime);
         		mDbHelper.updateAspiration(aId, aDescription, aNumStepsInProgress++, aNumStepsCompleted);
         		fillSteps();
+        		aStepsInProgress.setText(Integer.toString(aNumStepsInProgress));        		
+        		break;
+        	case EDIT_STEP:
+        		int stepId = extras.getInt(StepEntry._ID);
+        		String newDescription = extras.getString(StepEntry.COLUMN_NAME_DESCRIPTION);
+                String newDays = extras.getString(StepEntry.COLUMN_NAME_DAYS);
+                //update step
+                mDbHelper.updateStepOnEdit(stepId, newDescription, newDays);
+                fillSteps();
+                break;
         }
     }
 }

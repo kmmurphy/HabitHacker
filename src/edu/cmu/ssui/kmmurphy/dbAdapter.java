@@ -11,34 +11,41 @@ import android.provider.BaseColumns;
 
 
 /**
- * Simple database access helper class. 
+ * This class provides a sqlite database for the app, and all methods to query the database 
  *
- * modified from adapter in notepad exercise http://developer.android.com/training/notepad/index.html
+ * @author kmmurphy Kenneth Murphy
 **/
 public class dbAdapter {
     private DatabaseHelper mDbHelper;
     private SQLiteDatabase mDb;
-    
+
+    /**
+     * This class is the schema for a table to hold a user's aspirations
+     */
     public static abstract class AspirationEntry implements BaseColumns {
     	public static final String TABLE_NAME = "aspirations";
     	public static final String COLUMN_NAME_DESCRIPTION = "description";
     	public static final String COLUMN_NAME_STEPS_IN_PROGRESS = "stepsInProgress";
     	public static final String COLUMN_NAME_STEPS_COMPLETED = "stepsCompleted";
     }
-    
+
+    /**
+     * This class is the schema for a table to hold all the steps to meet aspirations
+     */
     public static abstract class StepEntry implements BaseColumns {
     	public static final String TABLE_NAME = "steps";
     	public static final String COLUN_NAME_ASPIRATION_ID = "aspirationId";
     	public static final String COLUMN_NAME_DESCRIPTION = "description";
     	public static final String COLUMN_NAME_STREAK = "streak";
     	public static final String COLUMN_NAME_COMPLETED = "completed";
-    	public static final String COLUMN_NAME_LAST_COMPLETE = "lastCompleted";
+    	public static final String COLUMN_NAME_DUE_DATE = "dueDate";
     	public static final String COLUMN_NAME_DAYS = "days";
+    	public static final String COLUMN_NAME_REMINDER_TIME = "reminderTime";
     }
     
     
     /**
-     * Database creation sql statements
+     * Commands to create the two tables
      */
     private static final String CREATE_TABLE_ASPIRATION = 
     		"CREATE TABLE " + AspirationEntry.TABLE_NAME + " (" +
@@ -54,19 +61,29 @@ public class dbAdapter {
     		        StepEntry.COLUMN_NAME_DESCRIPTION + " TEXT NOT NULL, " +
     		        StepEntry.COLUMN_NAME_STREAK + " INTEGER NOT NULL, " + 
     		        StepEntry.COLUMN_NAME_COMPLETED + " INTEGER NOT NULL, " +
-    		        StepEntry.COLUMN_NAME_LAST_COMPLETE + " TEXT, " +
-    		        StepEntry.COLUMN_NAME_DAYS + " TEXT NOT NULL);" ;
+    		        StepEntry.COLUMN_NAME_DUE_DATE + " TEXT, " +
+    		        StepEntry.COLUMN_NAME_DAYS + " TEXT NOT NULL, " +
+    		        StepEntry.COLUMN_NAME_REMINDER_TIME + " TEXT);" ;
     
     
     private final Context mCtx;
 
+    /** 
+     * This class provides methods to instantiate and update the database
+     *
+     */
     private static class DatabaseHelper extends SQLiteOpenHelper {
         private static final String DATABASE_NAME = "HabitHacker.db";
-        private static final int DATABASE_VERSION = 7;
+        private static final int DATABASE_VERSION = 16;
 
         private static DatabaseHelper sInstance = null;
         
-        //getInstance function so you don't create multiple database helpers...cause that's leaky and bad
+        /**
+         * Method to get the instance of the DatabaseHelper
+         * 
+         * @param context
+         * @return the database helper
+         */
         public static DatabaseHelper getInstance(Context context) {    
             if (sInstance == null) {
               sInstance = new DatabaseHelper(context.getApplicationContext());
@@ -122,7 +139,6 @@ public class dbAdapter {
         mDbHelper.close();
     }
 
-
     /**
      * Create a new aspiration. If the aspiration is
      * successfully created return the new rowId for that note, otherwise return
@@ -170,7 +186,6 @@ public class dbAdapter {
      * 
      * @return Cursor over all aspirations
      */
-    
     public Cursor fetchAllAspirations() {
         return mDb.query(AspirationEntry.TABLE_NAME, 
         		new String[] {AspirationEntry._ID, 
@@ -204,17 +219,23 @@ public class dbAdapter {
      * successfully created return the new rowId for that note, otherwise return
      * a -1 to indicate failure.
      * 
+     * @param aspirationId - The id of the aspiration to associate this step with
      * @param description - the description of the step
+     * @param dueDate - the next date the task should be completed
+     * @param days - strings of 1's and 0's indicating whether or not the 
+     * 				 task is to be complete on that day. Starts on Sunday 
      * @return rowId or -1 if failed
      */
-    public Long createStep(int aspirationId, String sDescription, String days){
-    	// get the step ids from the aspiration->step map
-        ContentValues initialValues = new ContentValues();
+    public Long createStep(int aspirationId, String sDescription, String dueDate, String days, String reminderTime){
+    	// create a string from the due date
+    	ContentValues initialValues = new ContentValues();
         initialValues.put(StepEntry.COLUN_NAME_ASPIRATION_ID, aspirationId);
         initialValues.put(StepEntry.COLUMN_NAME_DESCRIPTION, sDescription);
         initialValues.put(StepEntry.COLUMN_NAME_STREAK, 0);
         initialValues.put(StepEntry.COLUMN_NAME_COMPLETED, 0);
+        initialValues.put(StepEntry.COLUMN_NAME_DUE_DATE, dueDate);
         initialValues.put(StepEntry.COLUMN_NAME_DAYS, days);
+        initialValues.put(StepEntry.COLUMN_NAME_REMINDER_TIME, reminderTime);
 
         return mDb.insert(StepEntry.TABLE_NAME, null, initialValues);    	
     }
@@ -229,6 +250,11 @@ public class dbAdapter {
         return mDb.delete(StepEntry.TABLE_NAME, StepEntry._ID + "=" + rowId, null) > 0;
     }
     
+    /**
+     * Return a Cursor over the list of all steps in the database
+     * 
+     * @return Cursor over all steps
+     */
     public Cursor fetchSteps(int aspirationId) {
     	// query the database for steps associated with that aspiration id
     	return mDb.query(StepEntry.TABLE_NAME,
@@ -237,19 +263,72 @@ public class dbAdapter {
     					StepEntry.COLUMN_NAME_DESCRIPTION,
 				  		StepEntry.COLUMN_NAME_STREAK,
 				  		StepEntry.COLUMN_NAME_COMPLETED,
-				  		StepEntry.COLUMN_NAME_LAST_COMPLETE,
-				  		StepEntry.COLUMN_NAME_DAYS},
+				  		StepEntry.COLUMN_NAME_DUE_DATE,
+				  		StepEntry.COLUMN_NAME_DAYS,
+				  		StepEntry.COLUMN_NAME_REMINDER_TIME},
 				  	StepEntry.COLUN_NAME_ASPIRATION_ID+"=" + Integer.toString(aspirationId), 
 				  	null, null, null, null);
     }
-    
-    public boolean updateStep(int rowId, String description, int streak, int completed, String lastComplete, String days) {
+    /** 
+     * Update a step with the values entered
+     * 
+     * @param rowId - row id of the step to update
+     * @param description - description of the step
+     * @param streak - How many times in a row that task has been completed
+     * @param completed - whether or not the task is permanently complete
+     * @param dueDate - The next date the step is due
+     * @param days - the days the step is due on
+     * @return true if the step was successfully updated, false otherwise
+     */
+    public boolean updateStep(int rowId, String description, int streak, int completed, String dueDate, String days) {
         ContentValues args = new ContentValues();
         args.put(StepEntry.COLUMN_NAME_DESCRIPTION, description);
         args.put(StepEntry.COLUMN_NAME_STREAK, streak);
         args.put(StepEntry.COLUMN_NAME_COMPLETED, completed);
-        args.put(StepEntry.COLUMN_NAME_LAST_COMPLETE, lastComplete);
+        args.put(StepEntry.COLUMN_NAME_DUE_DATE, dueDate);
         args.put(StepEntry.COLUMN_NAME_DAYS, days);
-        return mDb.update(AspirationEntry.TABLE_NAME, args, AspirationEntry._ID + "=" + rowId, null) > 0;
+        return mDb.update(StepEntry.TABLE_NAME, args, StepEntry._ID + "=" + rowId, null) > 0;
+    }
+    
+    /**
+     *  Method to update the description and days of a step upon editing
+     *  
+     * @param rowId
+     * @param description
+     * @param days
+     * @return true if the step was successfully updated
+     */
+    public boolean updateStepOnEdit(int rowId, String description, String days){
+    	ContentValues args = new ContentValues();
+    	args.put(StepEntry.COLUMN_NAME_DESCRIPTION, description);
+    	args.put(StepEntry.COLUMN_NAME_DAYS, days);
+        return mDb.update(StepEntry.TABLE_NAME, args, StepEntry._ID + "=" + rowId, null) > 0;
+    }
+    
+    /** 
+     * Update the dueDate and streak values of a step upon swipe
+     * 
+     * @param rowId
+     * @param dueDate
+     * @param streak
+     * @return true if the step was successfully updated
+     */
+    public boolean updateStepOnSwipe(int rowId, String dueDate, int streak) {
+        ContentValues args = new ContentValues();
+        args.put(StepEntry.COLUMN_NAME_DUE_DATE, dueDate);
+        args.put(StepEntry.COLUMN_NAME_STREAK, streak);
+        return mDb.update(StepEntry.TABLE_NAME, args, StepEntry._ID + "=" + rowId, null) > 0;
+    }    
+    
+    /**
+     * Update a step to reflect that it's been permanently completed
+     * 
+     * @param rowId - row id of the step to mark complete
+     * @return true is the step is successfully marked complete
+     */
+    public boolean markStepComplete(int rowId){
+    	ContentValues args = new ContentValues();
+    	args.put(StepEntry.COLUMN_NAME_COMPLETED, 1);
+    	return mDb.update(StepEntry.TABLE_NAME, args, StepEntry._ID + "=" + rowId, null) > 0;
     }
 }

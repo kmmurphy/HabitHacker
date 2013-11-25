@@ -1,7 +1,6 @@
 package edu.cmu.ssui.kmmurphy;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import android.app.ActionBar;
 import android.app.AlertDialog;
@@ -10,7 +9,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.support.v4.widget.SimpleCursorAdapter;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
@@ -18,7 +16,6 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView.AdapterContextMenuInfo;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -27,9 +24,9 @@ import edu.cmu.ssui.kmmurphy.dbAdapter.AspirationEntry;
 public class MainActivity extends ListActivity {
 	private dbAdapter mDbHelper;
     private Cursor mAspirationsCursor;
-    SimpleCursorAdapter mAdapter;
+    AspirationAdapter mAdapter;
 
-	private List<Aspiration> aspirations = new ArrayList<Aspiration>();
+	private ArrayList<Aspiration> aspirations = new ArrayList<Aspiration>();
 	
 	private static final int ASPIRATION_CREATE = 0;
 	private static final int ASPIRATION_EDIT = 1;
@@ -49,7 +46,7 @@ public class MainActivity extends ListActivity {
 		fillData();
 		// register each aspiration for the context menu
         registerForContextMenu(getListView());
-        //attach click handler to add button
+
         Button addAspiration = (Button) findViewById(R.id.addAspiration);
         addAspiration.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -59,13 +56,18 @@ public class MainActivity extends ListActivity {
         });
 	}
 	
-	//adding a context menu on long press of an aspiration
+	/**
+	 * Creates context menu on long press of an aspiration to edit or delete an aspiration
+	 */
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
 	    super.onCreateContextMenu(menu, v, menuInfo);
 	    menu.add(0, ASPIRATION_EDIT, 0, R.string.edit_aspiration);
 	    menu.add(0, ASPIRATION_DELETE, 0, R.string.delete_aspiration);
 	}
 	
+	/**
+	 * Delete or edit an aspiration on selection in the context menu
+	 */
 	public boolean onContextItemSelected(MenuItem item) {
 		AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
         
@@ -85,6 +87,12 @@ public class MainActivity extends ListActivity {
 	    return super.onContextItemSelected(item);
 	}
     
+	/**
+	 * Creates a dialog to edit or create an aspiration
+	 * 
+	 * @param ACTION_ID
+	 * @param aspirationIndex
+	 */
     public void editAspiration(int ACTION_ID, int aspirationIndex) {
     	// create an aspiration through a dialog modal
     	AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -103,7 +111,7 @@ public class MainActivity extends ListActivity {
 		    builder.setView(dialogView)
 		    	.setTitle("Edit this Aspiration")
 		    	// Add action buttons
-		    	.setPositiveButton(R.string.confirm, new DialogInterface.OnClickListener() {
+		    	.setPositiveButton(R.string.done, new DialogInterface.OnClickListener() {
 					@Override
 					public void onClick(DialogInterface dialog, int which) {
 						// create new aspiration
@@ -125,7 +133,7 @@ public class MainActivity extends ListActivity {
 		    builder.setView(dialogView)
 		    	.setTitle("Create an Aspiration")
 		    	// Add action buttons
-		    	.setPositiveButton(R.string.confirm, new DialogInterface.OnClickListener() {
+		    	.setPositiveButton(R.string.done, new DialogInterface.OnClickListener() {
 					@Override
 					public void onClick(DialogInterface dialog, int which) {
 						// create new aspiration
@@ -145,6 +153,9 @@ public class MainActivity extends ListActivity {
 	    newAspirationDialog.show();
     }    
 	
+    /**
+     * Fetches all aspirations from the database and populate a listView with the data
+     */
     private void fillData() {
         aspirations.clear();
         // Get all of the notes from the database and create the item list
@@ -161,21 +172,19 @@ public class MainActivity extends ListActivity {
         	aspirations.add(newAsp);
         	mAspirationsCursor.moveToNext();
         }
-        mAspirationsCursor.moveToFirst();
-         
-        mAdapter = new SimpleCursorAdapter(this,
-                R.layout.aspiration_row, 
-                mAspirationsCursor,
-                new String[]{AspirationEntry.COLUMN_NAME_DESCRIPTION, AspirationEntry.COLUMN_NAME_STEPS_IN_PROGRESS},
-                new int[]{R.id.aspDescription, R.id.aspSteps});
+        
+        mAdapter = new AspirationAdapter(this, R.layout.aspiration_row, aspirations);
         setListAdapter(mAdapter);
     }
     
+    /**
+     * On click of an aspiration start a new activity to view the aspiration and its subgoals
+     */
     @Override
     protected void onListItemClick(ListView l, View v, int position, long id) {
         super.onListItemClick(l, v, position, id);
         
-        Aspiration a = getAspirationById((int)id);
+        Aspiration a = aspirations.get(position);
         if(a == null){
         	return;
         }
@@ -186,14 +195,5 @@ public class MainActivity extends ListActivity {
         i.putExtra(AspirationEntry.COLUMN_NAME_STEPS_IN_PROGRESS, a.getStepsInProgress());
         i.putExtra(AspirationEntry.COLUMN_NAME_STEPS_COMPLETED, a.getStepsCompleted());
         startActivity(i);
-    }
-    
-    private Aspiration getAspirationById(int id){
-    	for(int i=0; i<aspirations.size();i++){
-    		if(aspirations.get(i).getId() == id){
-    			return aspirations.get(i);
-    		}
-    	}
-    	return null;
     }
 }

@@ -1,76 +1,119 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical" >
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
 
-    <TextView
-        android:id="@+id/textView1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/step_description" />
-
-    <EditText
-        android:id="@+id/descriptionText"
-        android:layout_width="265dp"
-        android:layout_height="wrap_content"
-        android:ems="10" >
-
-        <requestFocus />
-    </EditText>
-
-    <CheckBox
-        android:id="@+id/checkBox1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Monday" />
-
-    <CheckBox
-        android:id="@+id/checkBox2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Tuesday" />
-
-    <CheckBox
-        android:id="@+id/checkBox3"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Wednesday" />
-
-    <CheckBox
-        android:id="@+id/checkBox4"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Thursday" />
-
-    <CheckBox
-        android:id="@+id/checkBox5"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Friday" />
-
-    <CheckBox
-        android:id="@+id/checkBox6"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Saturday" />
-
-    <CheckBox
-        android:id="@+id/checkBox7"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Sunday" />
-    
-    <Button
-        android:id="@+id/confirmButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Confirm" />
-
-    <Button
-        android:id="@+id/cancelButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Cancel" />
-
-</LinearLayout>
+    <RelativeLayout
+        android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+    	android:paddingBottom="@dimen/activity_vertical_margin"
+    	android:paddingLeft="@dimen/activity_horizontal_margin"
+    	android:paddingRight="@dimen/activity_horizontal_margin"
+    	android:paddingTop="@dimen/activity_vertical_margin"> 
+	        
+	    <TextView
+	        android:id="@+id/textView1"
+	        style="@style/h2"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:text="@string/step_description" />
+	
+	    <EditText
+	        android:id="@+id/descriptionText"
+			style="@style/h3"
+	        android:layout_width="fill_parent"
+	        android:layout_height="wrap_content"
+	        android:hint="@string/newStepHint"
+	        android:layout_below="@+id/textView1" >
+	    </EditText>
+	
+	    <LinearLayout
+	        android:id="@+id/daysRow1"
+	        android:layout_marginTop="12dip"
+	        android:layout_width="match_parent"
+	        android:layout_height="wrap_content"
+	        android:orientation="horizontal"
+	        android:layout_below="@+id/descriptionText">
+		    <Button
+		        android:id="@+id/monButton"
+		        android:layout_width="60dp"
+		        android:layout_height="60dp"
+		        android:contentDescription="@string/create_aspiration"
+		        android:background="@drawable/not_selected_mon"
+		        android:onClick="daySelected"/>
+		    <Button
+		        android:id="@+id/tuesButton"
+		        android:layout_width="60dp"
+		        android:layout_height="60dp"
+		        android:contentDescription="@string/create_aspiration"
+		        android:background="@drawable/not_selected_tues"
+		        android:onClick="daySelected"/>
+		    <Button
+		        android:id="@+id/wedButton"
+		        android:layout_width="60dp"
+		        android:layout_height="60dp"
+		        android:contentDescription="@string/create_aspiration"
+		        android:background="@drawable/not_selected_wed"
+		        android:onClick="daySelected"/>
+		    <Button
+		        android:id="@+id/thurButton"
+		        android:layout_width="60dp"
+		        android:layout_height="60dp"
+		        android:contentDescription="@string/create_aspiration"
+		        android:background="@drawable/not_selected_thur"
+		        android:onClick="daySelected"/>
+	    </LinearLayout>
+	    <LinearLayout
+	        android:id="@+id/daysRow2"
+	        android:layout_width="match_parent"
+	        android:layout_height="wrap_content"
+	        android:orientation="horizontal"
+	        android:layout_below="@+id/daysRow1">
+		 
+		    <Button
+		        android:id="@+id/friButton"
+		        android:layout_width="60dp"
+		        android:layout_height="60dp"
+		        android:contentDescription="@string/create_aspiration"
+		        android:background="@drawable/not_selected_fri"
+		        android:onClick="daySelected"/>
+		    <Button
+		        android:id="@+id/satButton"
+		        android:layout_width="60dp"
+		        android:layout_height="60dp"
+		        android:contentDescription="@string/create_aspiration"
+		        android:background="@drawable/not_selected_sat"
+		        android:onClick="daySelected"/>
+		    <Button
+		        android:id="@+id/sunButton"
+		        android:layout_width="60dp"
+		        android:layout_height="60dp"
+		        android:contentDescription="@string/create_aspiration"
+		        android:background="@drawable/not_selected_sun" 
+		        android:onClick="daySelected"/>
+		</LinearLayout>    
+	</RelativeLayout>
+	<LinearLayout
+	    android:layout_width="fill_parent"
+	    android:layout_height="60dp"
+	    android:orientation="horizontal"
+	    android:layout_alignParentBottom="true">
+	
+	    <Button
+	        android:id="@+id/cancelButton"
+	        style="@style/cancelButton"
+	        android:layout_width="wrap_content"
+	        android:layout_height="fill_parent"
+	        android:text="@string/cancel"
+	        android:layout_weight="1"/>
+		
+		<Button
+	        android:id="@+id/confirmButton"
+	        style="@style/confirmButton"
+	        android:layout_width="wrap_content"
+	        android:layout_height="fill_parent"
+	        android:text="@string/done"
+	        android:layout_weight="1"/>
+	    
+	</LinearLayout>
+</RelativeLayout>

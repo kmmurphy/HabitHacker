@@ -5,17 +5,22 @@
     <string name="action_settings">Settings</string>
     <!-- Strings related to aspirations -->
     <string name="enter_aspiration">Enter your Aspiration</string>
-    <string name="no_aspirations">Record an Aspiration</string>
+    <string name="no_aspirations">Create a new Aspiration</string>
+    <string name="no_steps">Create a new Goal to help meet your Aspiration</string>
     <string name="create_aspiration">Create Aspiration</string>
 	<string name="delete_aspiration">Delete Aspiration</string>
 	<string name="edit_aspiration">Edit Aspiration</string>
 	<string name="description">Your Aspiration</string>
-    <string name="confirm">Confirm</string>	
+    <string name="done">Done</string>	
     <string name="cancel">Cancel</string>	
     <string name="createAspirationHint">Enter Your Aspiration</string>
-	<string name="step_description">Step needed to work towards your aspiration</string>
+	<string name="step_description">What\'s your Goal?</string>
+	<string name="newStepHint">eg. Learn to cook a new, healthy meal</string>
 	<!-- Better Named Strings -->
 	<string name="userSummaryAspirations">Your Aspirations</string>
-	<string name="stepsInProgess">Steps in Progress</string>	
-	<string name="stepsCompleted">Steps Completed</string>	
+	<string name="stepsInProgess">Goals in Progress</string>	
+	<string name="stepsCompleted">Goals Complete</string>
+	<string name="complete_step">Mark Step Complete Forever</string>
+	<string name="edit_step">Edit Step</string>
+	<string name="delete_step">Delete Step</string>	
 </resources>
