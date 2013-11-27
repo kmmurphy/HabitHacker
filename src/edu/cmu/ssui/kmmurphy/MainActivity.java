@@ -74,13 +74,12 @@ public class MainActivity extends ListActivity {
 		switch(item.getItemId()) {
 	    case ASPIRATION_EDIT:
 	    	if(info.id >= 0 && info.id < aspirations.size()){
-	        	editAspiration(ASPIRATION_EDIT, (int)info.id);
+	        	editAspiration(ASPIRATION_EDIT, info.position);
 	        }
-	        Log.v("MURPHY","editing aspiration number "+Long.toString(info.id));
 	        return true;
 	    case ASPIRATION_DELETE:
-	        mDbHelper.deleteAspiration((int) info.id);
-	        Log.v("MURPHY","deleting aspiration number "+Long.toString(info.id));
+	    	Aspiration a = aspirations.get(info.position);
+	        mDbHelper.deleteAspiration(a.getId());
 	        fillData();
 	        return true;
 	    }

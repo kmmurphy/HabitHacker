@@ -20,7 +20,7 @@
 	<string name="userSummaryAspirations">Your Aspirations</string>
 	<string name="stepsInProgess">Goals in Progress</string>	
 	<string name="stepsCompleted">Goals Complete</string>
-	<string name="complete_step">Mark Step Complete Forever</string>
+	<string name="complete_step">Permanently Mark Step Complete</string>
 	<string name="edit_step">Edit Step</string>
 	<string name="delete_step">Delete Step</string>	
 </resources>

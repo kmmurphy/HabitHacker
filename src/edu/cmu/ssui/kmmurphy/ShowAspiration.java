@@ -7,6 +7,7 @@ import java.util.Comparator;
 
 import android.app.ActionBar;
 import android.app.ListActivity;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -18,6 +19,7 @@ import android.view.View;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 import edu.cmu.ssui.kmmurphy.dbAdapter.AspirationEntry;
 import edu.cmu.ssui.kmmurphy.dbAdapter.StepEntry;
 
@@ -132,7 +134,9 @@ public class ShowAspiration extends ListActivity {
      * Get the steps from the database, sort them, and display them in a listview
      */
 	private void fillSteps(){
-    	stepsCursor = mDbHelper.fetchSteps(aId);
+    	//TODO: change so this is only called on creation. 
+		//Can make updates in steps and call notifyDataSetChanged on stepAdapter
+		stepsCursor = mDbHelper.fetchSteps(aId);
 
     	steps.clear();
         stepsCursor.moveToFirst();
@@ -142,14 +146,20 @@ public class ShowAspiration extends ListActivity {
         	int streakLen = stepsCursor.getInt(2);
         	int completed = stepsCursor.getInt(3);
         	String dueDate = stepsCursor.getString(4);
-        	String reminderTime = stepsCursor.getString(5);
         	// set days due in for steps array
         	String days = stepsCursor.getString(5);
+        	String reminderTime = stepsCursor.getString(6);
+
         	Step newStep = new Step(id, description, streakLen, completed, dueDate, days, reminderTime);
         	if(dueDate.equals("")){
 	        	mDbHelper.updateStepOnSwipe(id, newStep.getDueDate(), streakLen);
         	}
         	steps.add(newStep);
+        	//TODO: change to only change reminders when needed
+        	// cancel any old reminder and add new one
+        	cancelReminder(newStep);
+        	addReminder(newStep);
+        	
         	stepsCursor.moveToNext();
         }
         // sort the steps list based on when the step is due
@@ -192,6 +202,12 @@ public class ShowAspiration extends ListActivity {
                     	        	// update dueDate in the db
                     	        	s.calculateDueDate();
                     	        	mDbHelper.updateStepOnSwipe(s.getId(), s.getDueDate(), s.getStreak()+1);
+                    	        	Context context = getApplicationContext();
+                    	        	CharSequence text = "Awesome! You've completed this "+Integer.toString(s.getStreak()+1)+" times";
+                    	        	int duration = Toast.LENGTH_SHORT;
+                    	        	
+                    	        	Toast toast = Toast.makeText(context, text, duration);
+                    	        	toast.show();
                                 }
                                 fillSteps();
                             }
@@ -223,12 +239,12 @@ public class ShowAspiration extends ListActivity {
                 String description = extras.getString(StepEntry.COLUMN_NAME_DESCRIPTION);
                 String days = extras.getString(StepEntry.COLUMN_NAME_DAYS);
                 String reminderTime = extras.getString(StepEntry.COLUMN_NAME_REMINDER_TIME);
-                // need to calculate the next due day and set it                
-        		mDbHelper.createStep(aId, description, "", days, reminderTime);
+
+                mDbHelper.createStep(aId, description, "", days, reminderTime);
         		mDbHelper.updateAspiration(aId, aDescription, aNumStepsInProgress++, aNumStepsCompleted);
         		fillSteps();
-        		aStepsInProgress.setText(Integer.toString(aNumStepsInProgress));        		
-        		break;
+        		aStepsInProgress.setText(Integer.toString(aNumStepsInProgress));      
+           		break;
         	case EDIT_STEP:
         		int stepId = extras.getInt(StepEntry._ID);
         		String newDescription = extras.getString(StepEntry.COLUMN_NAME_DESCRIPTION);
@@ -238,5 +254,29 @@ public class ShowAspiration extends ListActivity {
                 fillSteps();
                 break;
         }
+    }
+    
+    private void addReminder(Step s){
+             	Intent addReminder = new Intent(this, ReminderService.class);
+             	addReminder.putExtra(StepEntry._ID, s.getId());
+             	addReminder.putExtra(StepEntry.COLUMN_NAME_DESCRIPTION, s.getDescription());
+             	addReminder.putExtra(StepEntry.COLUMN_NAME_DAYS, s.getDays());
+             	addReminder.putExtra(StepEntry.COLUMN_NAME_DUE_DATE, s.getDueDate());
+             	addReminder.putExtra(StepEntry.COLUMN_NAME_REMINDER_TIME, s.getReminderTime());
+ 
+             	addReminder.setAction(ReminderService.CREATE);
+                startService(addReminder);
+    }
+    private void cancelReminder(Step s){
+    	Intent cancelReminder = new Intent(this, ReminderService.class);
+    	cancelReminder.putExtra(StepEntry._ID, s.getId());
+     	cancelReminder.putExtra(StepEntry.COLUMN_NAME_DESCRIPTION, s.getDescription());
+     	cancelReminder.putExtra(StepEntry.COLUMN_NAME_DAYS, s.getDays());
+     	cancelReminder.putExtra(StepEntry.COLUMN_NAME_DUE_DATE, s.getDueDate());
+     	cancelReminder.putExtra(StepEntry.COLUMN_NAME_REMINDER_TIME, s.getReminderTime());
+
+    	
+     	cancelReminder.setAction(ReminderService.CANCEL);
+        startService(cancelReminder);
     }
 }

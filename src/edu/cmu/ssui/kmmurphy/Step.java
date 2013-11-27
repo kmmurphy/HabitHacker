@@ -29,6 +29,8 @@ public class Step {
 	SimpleDateFormat formater;
 	
 	public Step(int sId, String sDescription, int sStreak, int sCompleted, String sDueDate, String sDays, String sReminderTime){
+		Log.v("MURPHY","create a step with reminder "+sReminderTime);
+		
 		id = sId;
 		description = sDescription;
 		streak = sStreak;

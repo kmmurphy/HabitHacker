@@ -49,7 +49,6 @@ public class ReminderService extends IntentService {
        	String dueDateStr = extras.getString(StepEntry.COLUMN_NAME_DUE_DATE);
        	String reminderTime = extras.getString(StepEntry.COLUMN_NAME_REMINDER_TIME);
          
-         
         if (matcher.matchAction(action)) {          
             execute(action, stepId, description, days, dueDateStr, reminderTime);
         }
@@ -61,68 +60,81 @@ public class ReminderService extends IntentService {
      * @param action
      * @param notificationId
      */
-    private void execute(String action, int stepId, String days, String description, String dueDateStr, String reminderTime) {
-    	
-        mDbHelper = new dbAdapter(this);
-		mDbHelper.open();
-		
+    private void execute(String action, int stepId, String description, String days, String dueDateStr, String reminderTime) {
+    			
 		//get the time to set an alarm for 
-    	SimpleDateFormat reminderFormater = new SimpleDateFormat("HH:mm", Locale.ROOT);
+    	SimpleDateFormat reminderFormater = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.ROOT);
     	SimpleDateFormat dueDateFormater =  new SimpleDateFormat("MM/dd/yyyy", Locale.ROOT);
     	Date reminderDate = null;
     	Date dueDate = null;
     	
     	try {
-			reminderDate = reminderFormater.parse(dueDateStr);
+			reminderDate = reminderFormater.parse(reminderTime);
     	} catch (ParseException e) {
-			Log.d("MURPHY", "remidner date couldn't be parsed");
+			Log.d("MURPHY", "reminder date couldn't be parsed");
 		}
     	
     	try {
-			dueDate = dueDateFormater.parse(reminderTime);
+			dueDate = dueDateFormater.parse(dueDateStr);
     	} catch (ParseException e) {
 			Log.d("MURPHY", "due date couldn't be parsed");
 		}
     	
-			
+		
 		GregorianCalendar rCalendar = new GregorianCalendar();
 		rCalendar.setTime(reminderDate);
-		
 		int hour = rCalendar.get(Calendar.HOUR_OF_DAY);
 		int minutes = rCalendar.get(Calendar.MINUTE);
+		
+		//set the alarm to repeat in a week
+		long repeatingInterval = 1000 * 60 * 60 * 24 * 7;
 		Log.v("MURPHY", "hours set to "+Integer.toString(hour)+" minutes set to "+Integer.toString(minutes));
 		
+		GregorianCalendar dueCalendar = new GregorianCalendar();
+		dueCalendar.setTime(dueDate);
+		
+		dueCalendar.set(Calendar.HOUR_OF_DAY, hour);
+		dueCalendar.set(Calendar.MINUTE, minutes);
+		
 		AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        
-			for(int i=0; i<7; i++){
-				if(days.charAt(i) == '1'){
-					Log.v("MURPHY", "setting an alarm");
-					Intent intent = new Intent(this, ReminderReceiver.class);
-					intent.putExtra(StepEntry._ID, stepId);
-			        intent.putExtra(StepEntry.COLUMN_NAME_DESCRIPTION, description);
-			         
-			        PendingIntent pi = PendingIntent.getBroadcast(this, 0, intent, 
-			                                                        PendingIntent.FLAG_UPDATE_CURRENT);
-			        
-					
-				}
-			}
-        /* 
-        Intent i = new Intent(this, ReminderReceiver.class);
-        i.putExtra(StepEntry._ID, c.getLong(c.getColumnIndex(StepEntry._ID)));
-        i.putExtra(StepEntry.COLUMN_NAME_DESCRIPTION, c.getString(c.getColumnIndex(StepEntry.COLUMN_NAME_DESCRIPTION)));
+		Intent intent = new Intent(this, ReminderReceiver.class);
+		intent.putExtra(StepEntry._ID, stepId);
+        intent.putExtra(StepEntry.COLUMN_NAME_DESCRIPTION, description);
          
-        PendingIntent pi = PendingIntent.getBroadcast(this, 0, i, 
-                                                        PendingIntent.FLAG_UPDATE_CURRENT);
- 
-        long time = c.getLong(c.getColumnIndex(Notification.COL_DATETIME));
-        
-        if (CREATE.equals(action)) {
-            am.set(AlarmManager.RTC_WAKEUP, time, pi);
-             
-        } else if (CANCEL.equals(action)) {
-            am.cancel(pi);
-        }
-        */      
+        PendingIntent pi = PendingIntent.getBroadcast(this, 0, intent, 
+                                                        PendingIntent.FLAG_UPDATE_CURRENT);       
+		
+		int dayOfWeek = dueCalendar.get(Calendar.DAY_OF_WEEK);
+		int daysToAdd = 0;
+		//find the next day the goal is due
+		for(int i=dayOfWeek; i<7; i++){
+			if(days.charAt(i) == '1'){
+				dueCalendar.add(Calendar.DATE, daysToAdd);
+				daysToAdd = 0;
+		        //need to change the dueCalendar time based upon the day of the week
+		        if (CREATE.equals(action)) {
+		        	am.setRepeating(AlarmManager.RTC, dueCalendar.getTimeInMillis(), repeatingInterval, pi);
+		             
+		        } else if (CANCEL.equals(action)) {
+		            am.cancel(pi);
+		        }
+			}
+			daysToAdd++;
+		}
+		for(int i = 0; i < dayOfWeek; i++){
+			if(days.charAt(i) == '1'){
+				dueCalendar.add(Calendar.DATE, daysToAdd);
+				daysToAdd = 0;
+
+		        //need to change the dueCalendar time based upon the day of the week
+		        if (CREATE.equals(action)) {
+		        	am.setRepeating(AlarmManager.RTC, dueCalendar.getTimeInMillis(), repeatingInterval, pi);
+		             
+		        } else if (CANCEL.equals(action)) {
+		            am.cancel(pi);
+		        }
+			}
+			daysToAdd++;
+		}		
     }
 }

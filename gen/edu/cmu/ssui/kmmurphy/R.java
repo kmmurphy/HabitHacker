@@ -24,8 +24,8 @@ public final class R {
         public static final int add_button=0x7f020000;
         public static final int cancel_button=0x7f020001;
         public static final int confirm_button=0x7f020002;
-        public static final int homescreenbg=0x7f020003;
-        public static final int ic_launcher=0x7f020004;
+        public static final int ic_launcher=0x7f020003;
+        public static final int logo=0x7f020004;
         public static final int not_selected_fri=0x7f020005;
         public static final int not_selected_mon=0x7f020006;
         public static final int not_selected_sat=0x7f020007;
@@ -149,6 +149,7 @@ public final class R {
         public static final int habitHackerActionBarStyle=0x7f060002;
         public static final int habitHackerActionBarText=0x7f060003;
         public static final int pageWrapper=0x7f060009;
+        public static final int reminderButton=0x7f06000d;
         public static final int rowStyle=0x7f06000a;
     }
 }

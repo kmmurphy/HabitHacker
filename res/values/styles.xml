@@ -73,4 +73,10 @@
         <item name="android:textColor">#5474AB</item>
         <item name="android:background">@drawable/cancel_button</item>
     </style>
+    
+    <style name="reminderButton">
+        <item name="android:textSize">18sp</item>
+        <item name="android:textColor">#5474AB</item>
+        <item name="android:paddingTop">15dp</item>
+    </style>
 </resources>

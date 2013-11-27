@@ -74,7 +74,7 @@ public class dbAdapter {
      */
     private static class DatabaseHelper extends SQLiteOpenHelper {
         private static final String DATABASE_NAME = "HabitHacker.db";
-        private static final int DATABASE_VERSION = 16;
+        private static final int DATABASE_VERSION = 18;
 
         private static DatabaseHelper sInstance = null;
         

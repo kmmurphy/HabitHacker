@@ -3,16 +3,22 @@ package edu.cmu.ssui.kmmurphy;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Locale;
 
 import android.app.Activity;
+import android.app.Dialog;
+import android.app.DialogFragment;
+import android.app.TimePickerDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TimePicker;
 import edu.cmu.ssui.kmmurphy.dbAdapter.StepEntry;
 
 /**
@@ -26,6 +32,9 @@ public class CreateStep extends Activity {
 	private EditText DescriptionText;
 	private int[] dayArray = new int[7];
 	private int stepId;
+	
+	private int reminderH = 12;
+	private int reminderM = 0;
 	
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,7 +55,10 @@ public class CreateStep extends Activity {
         	String days = extras.getString(StepEntry.COLUMN_NAME_DAYS);
         	//set day of week buttons
         	loadDays(days);
+        }else{
+        	stepId = -1;
         }
+        
         //set click handlers for the confirm and cancel button
         confirmButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
@@ -61,10 +73,13 @@ public class CreateStep extends Activity {
 		        
 		        //create a reminder to default to noon. Change to time picker!!
 		        GregorianCalendar cal = new GregorianCalendar();
-		        cal.set(Calendar.HOUR_OF_DAY, 12);
-		        cal.set(Calendar.MINUTE, 0);
-		        SimpleDateFormat formater = new SimpleDateFormat("HH:mm", Locale.ROOT);
-		        String reminderTime = formater.format(cal);
+		        Date currentTime = new Date();
+		        cal.setTime(currentTime);
+		        cal.set(Calendar.HOUR_OF_DAY, reminderH);
+		        cal.set(Calendar.MINUTE, reminderM);
+		        SimpleDateFormat formater = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.ROOT);
+		        String reminderTime = formater.format(cal.getTime());
+		        
 		        Log.v("MURPHY", "setting the reminder to be: "+reminderTime);
 		        
 		        stepInfo.putInt(StepEntry._ID, stepId);
@@ -215,4 +230,22 @@ public class CreateStep extends Activity {
 	    	}
     	}
     }
+ 
+    public void changeReminderTime(View v){
+    	showDialog(0);
+    }
+    
+    @Override
+    protected Dialog onCreateDialog(int id) {
+        // set time picker as current time
+        return new TimePickerDialog(this, timePickerListener, reminderH, reminderM ,false);
+    }
+
+    
+    private TimePickerDialog.OnTimeSetListener timePickerListener =  new TimePickerDialog.OnTimeSetListener() {
+        public void onTimeSet(TimePicker view, int selectedHour, int selectedMinute) {
+            reminderH = selectedHour;
+            reminderM = selectedMinute;
+        }
+    };
 }
