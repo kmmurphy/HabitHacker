@@ -1,3 +1,5 @@
+This is an Android app made for a intro to Android class.  The time frame to complete it was pretty short, and the code is not the cleanest. 
+
 HabitHacker is an app that helps you acheive your goals.  You can create an aspiration such as "living a healthier lifestyle" or "Getting a 4.0 this semester" and then set subgoals within that aspiration.  For a subgoal you can set when during the week that goal should be done, and you can check off the goal as you complete it.  The app also notifies you on a daily basis of when a subgoal is due. 
 
 
